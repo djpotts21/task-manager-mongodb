@@ -114,7 +114,8 @@ def add_task():
         flash("Task Successfully Added")
         return redirect(url_for("get_tasks"))
 
-    categories = mongo.db.categories.find().sort("category_name", 1)
+    categories = mongo.db.categories.find(
+        {"status": "active"}).sort("category_name", 1)
     return render_template("add_task.html", categories=categories)
 
 
@@ -136,7 +137,8 @@ def edit_task(task_id):
 
     task = mongo.db.tasks.find_one({"_id": ObjectId(task_id)})
 
-    categories = mongo.db.categories.find().sort("category_name", 1)
+    categories = mongo.db.categories.find(
+        {"status": "active"}).sort("category_name", 1)
     return render_template("edit_task.html", task=task, categories=categories)
 
 
@@ -148,6 +150,51 @@ def complete_task(task_id):
             {"_id": ObjectId(task_id)},
             {'$set': {"status": "complete"}})
         flash("Task Successfully Completed")
+
+    return redirect(url_for("get_tasks"))
+
+
+@app.route("/manage_categories")
+def manage_categories():
+    categories = list(mongo.db.categories.find(
+        {"status": "active"}).sort("category_name", 1))
+    return render_template("categories.html", categories=categories)
+
+
+@app.route("/edit_category/<category_id>", methods=["GET", "POST"])
+def edit_category(category_id):
+
+    if request.method == "POST":
+        mongo.db.categories.update_one(
+            {"_id": ObjectId(category_id)},
+            {'$set': {"category_name": request.form.get("category_name")}})
+        flash("Category Successfully Edited")
+        return redirect(url_for("manage_categories"))
+
+    category = mongo.db.categories.find_one({"_id": ObjectId(category_id)})
+    return render_template("edit_category.html", category=category)
+
+
+@app.route("/add_category", methods=["GET", "POST"])
+def add_category():
+    if request.method == "POST":
+        mongo.db.categories.insert_one(
+            {"category_name": request.form.get("category_name")})
+        flash("Category Successfully Added")
+        return redirect(url_for("manage_categories"))
+    return render_template("add_category.html")
+
+
+@app.route("/archive_category/<category_id>", methods=["GET", "POST"])
+def archive_category(category_id):
+    category = mongo.db.categories.find_one({"_id": ObjectId(category_id)})
+    if request.method == "POST":
+        mongo.db.categories.update_one(
+            {"_id": ObjectId(category_id)},
+            {'$set': {
+                "status": "archived",
+                "category_name": category["category_name"] + "_archived"}})
+        flash("Category Successfully Archived")
 
     return redirect(url_for("get_tasks"))
 

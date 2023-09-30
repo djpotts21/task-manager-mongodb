@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block content %}
+<h3 class="light-blue-text text-darken-4 center-align">Manage Categories</h3>
+<div class="row">
+    <div class="col s12 center-align">
+        <a href="{{ url_for('add_category') }}" class="btn-large light-blue darken-1 text-shadow">New Category<i class="fas fa-plus-circle right"></i></a>
+    </div>
+</div>
+<div class="row">
+    
+    {% for category in categories %}
+    <div class="col s12 m3">
+        <div class="card light-blue darken-4 text-shadow center-align">
+            <div class="card-content white-text">
+                <span class="card-title">{{ category.category_name }}</span>
+            </div>
+            <div class="card-action center-align">
+                <a class="btn-small light-blue lighten-1" href="{{ url_for('edit_category', category_id=category._id) }}">Edit</a>
+                <form class="in-line" method="POST" action="{{ url_for('archive_category', category_id=category._id) }}">
+                    <button type="submit" class="btn-small red accent-4">Archive</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
