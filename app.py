@@ -191,12 +191,20 @@ def archive_category(category_id):
     if request.method == "POST":
         mongo.db.categories.update_one(
             {"_id": ObjectId(category_id)},
-            {'$set': {
-                "status": "archived",
-                "category_name": category["category_name"] + "_archived"}})
+            {'$set': {"status": "archived"}})
+        mongo.db.tasks.update_many(
+            {"category_name": category["category_name"]},
+            {'$set': {"category_status": "archived"}})
         flash("Category Successfully Archived")
 
     return redirect(url_for("get_tasks"))
+
+
+@app.route("/search", methods=["GET", "POST"])
+def search():
+    query = request.form.get("query")
+    tasks = list(mongo.db.tasks.find({"$text": {"$search": query}}))
+    return render_template("tasks.html", tasks=tasks, query=query)
 
 
 if __name__ == "__main__":
