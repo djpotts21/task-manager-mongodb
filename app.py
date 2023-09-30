@@ -25,7 +25,7 @@ mongo = PyMongo(app)
 @app.route("/")
 @app.route("/get_tasks")
 def get_tasks():
-    tasks = list(mongo.db.tasks.find())
+    tasks = list(mongo.db.tasks.find({"status": "in-progress"}))
     return render_template("tasks.html", tasks=tasks)
 
 
@@ -107,7 +107,8 @@ def add_task():
             "task_description": request.form.get("task_description"),
             "is_urgent": is_urgent,
             "due_date": request.form.get("due_date"),
-            "created_by": session["user"]
+            "created_by": session["user"],
+            "status": "in-progress"
         }
         mongo.db.tasks.insert_one(task)
         flash("Task Successfully Added")
@@ -137,6 +138,18 @@ def edit_task(task_id):
 
     categories = mongo.db.categories.find().sort("category_name", 1)
     return render_template("edit_task.html", task=task, categories=categories)
+
+
+@app.route("/complete_task/<task_id>", methods=["GET", "POST"])
+def complete_task(task_id):
+
+    if request.method == "POST":
+        mongo.db.tasks.update_one(
+            {"_id": ObjectId(task_id)},
+            {'$set': {"status": "complete"}})
+        flash("Task Successfully Completed")
+
+    return redirect(url_for("get_tasks"))
 
 
 if __name__ == "__main__":

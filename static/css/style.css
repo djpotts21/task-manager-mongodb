@@ -11,3 +11,6 @@
     margin: 5px;
     line-height: 42px;
 }
+form.in-line{
+    display: inline;
+}
